@@ -1,44 +1,49 @@
-# This is a basic workflow to help you get started with Actions
+name: Workflow Clase DS2
 
-name: Mi primera action
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+permissions:
+  contents: read
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  mybuild:
-    # The type of runner that the job will run on
+  build:
+
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+    - name: Clonando el repositorio
+      uses: actions/checkout@v4
 
-    # Runs a single command using the runners shell
-    - name: script de revisión previa
-      run: |
-        echo Hello, world!
-        hostname
-        pwd
-        ls -l
-        find .
-      
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
 
-    - name: script de revisión posterior
+    - name: Install dependencies
       run: |
-        echo Hello, world!
-        hostname
-        pwd
-        ls -l
-        find .
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Validando software instalado
+      run: |
+        pip freeze
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Tests
+      run: |
+        python -m unittest discover -s tests
+    - name: Deploy to Render
+      run: |
+        curl -X POST "https://api.render.com/deploy/srv-csqe4c5ds78s73cs7c4g?key=lSBv1ArQi0M" \
+        -H "Content-Type: application/json" \
+        -d '{}'
